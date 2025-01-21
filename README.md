@@ -2,7 +2,10 @@
 
 Neovim plugin for displaying [git blame](https://git-scm.com/docs/git-blame) information.
 
-TODO: image 1, image 2
+![demo_image_1](https://github.com/user-attachments/assets/67466af3-e722-4cbd-b6ee-aada9834f85b)
+
+![demo_image_2](https://github.com/user-attachments/assets/f7eceba2-10fc-48ea-bf17-506e0ac43bc3)
+
 
 ## ✨ Features
 
@@ -174,7 +177,7 @@ local StructedLine = {}
 
 **Built-in**:
 
-- [`require("blame-column.structurizers").colorized_date_author`](TODO: link)
+- [`require("blame-column.structurizers").colorized_date_author`](./lua/blame-column/structurizers.lua#L37)
 
 #### Colorizer func
 
@@ -231,8 +234,8 @@ local GeneralInfo = {}
 
 **Built-in**:
 
-- [`require("blame-column.colorizers").random_fg`](TODO: link)
-- [`require("blame-column.colorizers").time_based_bg`](TODO: link)
+- [`require("blame-column.colorizers").random_fg`](./lua/blame-column/colorizers.lua#L13)
+- [`require("blame-column.colorizers").time_based_bg`](./lua/blame-column/colorizers.lua#L39)
 
 ## 🚀 Usage
 
@@ -261,6 +264,8 @@ See [my neovim configuration](https://github.com/Yu-Leo/nvim).
 
 PRs and Issues are always welcome.
 
+See [bug](https://github.com/Yu-Leo/blame-column.nvim/issues?q=is%3Aissue+is%3Aopen+label%3Abug) and [PR Please](https://github.com/Yu-Leo/blame-column.nvim/issues?q=is:issue%20state:open%20label:%22pr%20please%22) issues if you are looking for some work to get you started.
+
 Author: [@Yu-Leo](https://github.com/Yu-Leo)
 
 ## 🫶 Alternatives and sources of inspiration
@@ -269,39 +274,44 @@ Author: [@Yu-Leo](https://github.com/Yu-Leo)
 
 I really like how gif blame is displayed in JB IDEs.
 
-Key features that I tried to replicate in this plugin:
+**Key features that I tried to replicate in this plugin:**
 
 - Display in the column to the left of the source buffer.
-- The background color of the commit depends on the age of the commit. The older the commit, the darker the background.
-- Displaying only the author's last name if the "commit author" field consists of two words
-- Displays relative dates. "Today" and "Yesterday"
+- Automatic calculation of the window width depending on the content
+- The background color of the commit info depends on the age of the commit. The older the commit, the darker the background.
+- Displaying only the author's surname if the "commit author" field consists of two words
+- Displays relative dates: "Today" and "Yesterday"
 
 ### [psjay/blamer.nvim](https://github.com/psjay/blamer.nvim)
 
-It's a good plugin, but it's not functional enough for me. It was taken as the basis of my plugin. I express my gratitude to [@psjay](https://github.com/psjay)
+It's a good plugin, but it's not functional enough for me. It was taken as the basis of my plugin. I express my gratitude to [@psjay](https://github.com/psjay).
 
 **Key features:**
+
 - Real-time updates of blame information as you edit
 - Synchronized scrolling of the source buffer and the blame buffer
 
 **Features that I was missing:**
+
 - More customizable blame window options:
     - The ability to display a window to the left of the source buffer
     - Automatic calculation of the window width depending on the content
 - More options for customizing the string format and coloring
-- Line coloring based on the commit age
+- Line coloring based on the commit information
 
 ### [FabijanZulj/blame.nvim](https://github.com/FabijanZulj/blame.nvim)
 
-It's a really functional plugin, but it doesn't fully satisfy my needs. Served as a source of inspiration for expanding the capabilities of my plugin. I express my gratitude to [@FabijanZulj](https://github.com/FabijanZulj) and all the contributors.
+It's a really functional plugin, but it doesn't fully satisfy my needs. I've implemented some of its features in my plugin. I express my gratitude to [@FabijanZulj](https://github.com/FabijanZulj) and all the contributors.
 
 **Key features:**
+
 - Highly customizable line format and coloring
-- Displaying commit information in a pop-up window
-- Displaying full commit information in a separate window
-- Blame stack. You can see the status of the file before the selected commit
+- [Blame stack](https://github.com/FabijanZulj/blame.nvim?tab=readme-ov-file#blame-stack). You can see the status of the file before the selected commit
+- Displaying [commit information](https://github.com/FabijanZulj/blame.nvim?tab=readme-ov-file#commit-info) in a pop-up window
+- Displaying [full commit information](https://github.com/FabijanZulj/blame.nvim?tab=readme-ov-file#full-commit-info) in a separate window
 
 **Features that I was missing:**
+
 - Real-time updates of blame information as you edit
 - Synchronized scrolling of the source buffer and the blame buffer
 - Line coloring based on the commit age

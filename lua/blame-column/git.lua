@@ -127,7 +127,7 @@ local function parse_blame_output(raw_blame)
 
 			if add_info then
 				current_commit.filename = add_info.filename
-				current_commit.summary = add_info.symmary
+				current_commit.summary = add_info.summary
 
 				current_commit.author = ""
 				current_commit.author_surname = ""
