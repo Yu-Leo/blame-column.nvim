@@ -1,6 +1,7 @@
 local utils = require("blame-column.utils")
 local git = require("blame-column.git")
 local config = require("blame-column.config")
+local ci_window = require("blame-column.commit_info_window")
 
 local api = vim.api
 
@@ -14,6 +15,8 @@ local M = {
 		blame_winid = nil,
 
 		augroup = nil,
+
+		file_info = nil,
 	},
 }
 
@@ -35,20 +38,22 @@ M.close = function()
 	M.state.blame_winid = nil
 	vim.wo[M.state.source_winid].scrollbind = false
 	vim.wo[M.state.source_winid].cursorbind = false
+
+	ci_window.close(false)
 end
 
+---@param file_info blameColumn.FileInfo
 M.open = function(file_info)
 	M.state.source_bufnr = api.nvim_get_current_buf()
 	M.state.source_winid = api.nvim_get_current_win()
 
 	M.setup_blame_window(file_info)
 
-	-- Switch back to the original window
 	vim.api.nvim_set_current_win(M.state.source_winid)
 
 	-- Set up autocommands to disable scrollbind and clean up
 	M.state.augroup = api.nvim_create_augroup("BlameColumnAuGroup", { clear = true })
-	M.create_open_close_autocmds()
+	M.create_autocmds()
 
 	M.create_keymaps()
 
@@ -57,6 +62,7 @@ M.open = function(file_info)
 	M.state.source_buf_autocmd = M.create_text_changed_autocmd()
 end
 
+---@param file_info blameColumn.FileInfo
 M.setup_blame_window = function(file_info)
 	M.state.blame_bufnr = api.nvim_create_buf(false, true)
 
@@ -82,7 +88,7 @@ M.setup_blame_window = function(file_info)
 	api.nvim_win_set_width(M.state.blame_winid, width)
 end
 
-M.create_open_close_autocmds = function()
+M.create_autocmds = function()
 	local bufenter_autocmd_id = api.nvim_create_autocmd({ "BufEnter" }, {
 		group = M.state.augroup,
 		pattern = "*",
@@ -119,18 +125,89 @@ M.create_open_close_autocmds = function()
 			api.nvim_del_autocmd(bufenter_autocmd_id)
 			api.nvim_del_autocmd(M.state.source_buf_autocmd)
 			M.state.blame_winid = nil
+			if ci_window.is_open() then
+				ci_window.close(false)
+			end
+		end,
+	})
+
+	api.nvim_create_autocmd({ "WinEnter" }, {
+		group = M.augroup,
+		buffer = M.state.source_bufnr,
+		callback = function()
+			if ci_window.is_open() then
+				ci_window.close(false)
+			end
+		end,
+	})
+
+	api.nvim_create_autocmd({ "CursorMoved", "WinScrolled" }, {
+		buffer = M.state.blame_bufnr,
+		callback = function()
+			if ci_window.is_open() then
+				ci_window.close(false)
+				if config.opts.commit_info.follow_cursor then
+					M.open_commit_info()
+				end
+			end
 		end,
 	})
 end
 
 M.create_keymaps = function()
-	api.nvim_buf_set_keymap(M.state.blame_bufnr, "n", "<ESC>", "", {
+	api.nvim_buf_set_keymap(M.state.blame_bufnr, "n", config.opts.mappings.close_commit_info_from_blame, "", {
 		callback = function()
+			if ci_window.is_open() then
+				ci_window.close(false)
+				return
+			end
 			api.nvim_win_close(M.state.blame_winid, true)
 		end,
 		noremap = true,
 		silent = true,
 	})
+
+	if config.opts.commit_info.enabled_from_blame then
+		api.nvim_buf_set_keymap(M.state.blame_bufnr, "n", config.opts.mappings.open_commit_info_from_blame, "", {
+			callback = function()
+				M.open_commit_info()
+			end,
+			noremap = true,
+			silent = true,
+		})
+	end
+
+	if config.opts.full_commit_info.enabled_from_blame then
+		api.nvim_buf_set_keymap(M.state.blame_bufnr, "n", config.opts.mappings.open_full_commit_info_from_blame, "", {
+			callback = function()
+				M.open_full_commit_info()
+			end,
+			noremap = true,
+			silent = true,
+		})
+	end
+end
+
+M.open_commit_info = function()
+	local row, _ = unpack(vim.api.nvim_win_get_cursor(M.state.blame_winid))
+	local line_info = M.state.file_info.lines[row]
+
+	if line_info.is_modified then
+		return
+	end
+
+	ci_window.open(line_info, config.opts.commit_info, config.opts.mappings)
+end
+
+M.open_full_commit_info = function()
+	local row, _ = unpack(vim.api.nvim_win_get_cursor(M.state.blame_winid))
+	local line_info = M.state.file_info.lines[row]
+
+	if line_info.is_modified then
+		return
+	end
+
+	config.opts.full_commit_info.opener_fn(line_info)
 end
 
 M.create_text_changed_autocmd = function()
@@ -155,6 +232,8 @@ end
 
 ---@param file_info blameColumn.FileInfo
 M.update_blame_buf = function(file_info)
+	M.state.file_info = file_info
+
 	if not api.nvim_buf_is_valid(M.state.blame_bufnr) then
 		return
 	end
