@@ -84,6 +84,10 @@ M.setup_blame_window = function(file_info)
 	vim.wo[M.state.blame_winid].signcolumn = config.opts.window_opts.signcolumn
 	vim.wo[M.state.blame_winid].list = config.opts.window_opts.list
 
+	if api.nvim_get_option_value("winbar", { win = M.state.source_winid }) ~= "" then
+		vim.wo[M.state.blame_winid].winbar = " "
+	end
+
 	local width = utils.calculate_max_width(file_info, config.opts)
 	api.nvim_win_set_width(M.state.blame_winid, width)
 end
